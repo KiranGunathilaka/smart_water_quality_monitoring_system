@@ -3,12 +3,13 @@
 
 #include <Arduino.h>
 #include <WiFi.h>
+#include <WiFiClientSecure.h>  // Changed from WiFiClient to WiFiClientSecure
 #include <PubSubClient.h>
 #include "config.h"
 
 class MQTTClient {
 private:
-    WiFiClient espClient;
+    WiFiClientSecure espClient;  // Changed from WiFiClient to WiFiClientSecure
     PubSubClient client;
     
     unsigned long lastReconnectAttempt = 0;
@@ -70,13 +71,16 @@ public:
     }
     
     void init() {
+        // Skip certificate verification (only for testing/development)
+        espClient.setInsecure();
+        
         // Set server and port
         client.setServer(MQTT_BROKER, MQTT_PORT);
         
         // Set callback function for incoming messages
         client.setCallback(callback);
         
-        Serial.println("MQTT client initialized");
+        Serial.println("MQTT client initialized with TLS support");
     }
     
     void connect() {

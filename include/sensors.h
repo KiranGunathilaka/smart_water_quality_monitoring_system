@@ -31,18 +31,21 @@ private:
     
     // Convert pH voltage to pH value
     float convertVoltageToPH(float voltage) {
-        // pH = 7.0 - ((voltage - pHNeutralVoltage) / pHSlope)
-        return 7.0f - ((voltage - PH_NEUTRAL_VOLTAGE) / PH_CALIBRATION_SLOPE) + PH_CALIBRATION_OFFSET;
+        return 7.0f - ((voltage - PH_7_VOLTAGE) / PH_CALIBRATION_SLOPE);
     }
     
     // Convert TDS voltage to TDS value (ppm)
     float convertVoltageToTDS(float voltage, float temperature) {
-        // Temperature compensation
-        float compensationCoefficient = 1.0f + TDS_TEMPERATURE_COEFFICIENT * (temperature - 25.0f);
-        float compensatedVoltage = voltage / compensationCoefficient;
+        // // Temperature compensation
+        // float compensationCoefficient = 1.0f + TDS_TEMPERATURE_COEFFICIENT * (temperature - 25.0f);
+        // float compensatedVoltage = voltage / compensationCoefficient;
+
+        //for the moment temperature compensation is neglected as the temperature readings has higher variation
+        //possible to implement this to manually measure the temperature and send that via the node red dashboard
+        float compensatedVoltage = voltage;
         
         // Convert to TDS value (ppm)
-        // TDS = (133.42 * compensatedVoltage^3 - 255.86 * compensatedVoltage^2 + 857.39 * compensatedVoltage) * TDS_CALIBRATION_FACTOR
+        // https://randomnerdtutorials.com/arduino-tds-water-quality-sensor/
         float tds = (133.42f * compensatedVoltage * compensatedVoltage * compensatedVoltage - 
                     255.86f * compensatedVoltage * compensatedVoltage + 
                     857.39f * compensatedVoltage) * TDS_CALIBRATION_FACTOR;
@@ -64,10 +67,9 @@ private:
         return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min;
     }
     
-    // Convert temperature voltage to Celsius
+    // Assumed linear Conversion
     float convertVoltageToTemperature(float voltage) {
-        // Simple linear conversion - adjust based on your specific temperature sensor
-        return (voltage * 100.0f) + TEMP_OFFSET;
+        return (voltage - TEMP_30_VOLTAGE) / (TEMP_45_VOLTAGE - TEMP_30_VOLTAGE) *15 + 30;
     }
 
 public:

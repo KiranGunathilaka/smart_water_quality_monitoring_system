@@ -2,10 +2,10 @@
 #define CONFIG_H
 
 // Pin definitions
-#define PH_PIN 4
-#define TDS_PIN 15
-#define TURBIDITY_PIN 5
-#define TEMP_PIN 18
+#define PH_PIN 34
+#define TDS_PIN 33
+#define TURBIDITY_PIN 35
+#define TEMP_PIN 32            //chose any ADCs on ADC1. Not ADC2 as it's used by Wifi
 
 // ADC settings
 #define VOLTAGE_REF 3.3f
@@ -13,35 +13,36 @@
 
 // Timing constants
 #define SAMPLE_INTERVAL 1000   // Sample interval in ms
-#define MQTT_PUBLISH_INTERVAL 10000  // Publish to MQTT every 10 seconds
+#define MQTT_PUBLISH_INTERVAL 5000  // Publish to MQTT every 10 seconds
 #define SERIAL_BAUD_RATE 9600
 
 // pH sensor calibration constants
-#define PH_CALIBRATION_OFFSET 0.0f
-#define PH_CALIBRATION_SLOPE -0.18f
-#define PH_NEUTRAL_VOLTAGE 2.5f
+#define PH_CALIBRATION_SLOPE -0.22f   // 3.3 * (3850/4095) / (14-0)   3850 is the maximum adc value practically reaching
+#define PH_7_VOLTAGE 1.58f
 
 // TDS sensor calibration constants
 #define TDS_TEMPERATURE_COEFFICIENT 0.02f
 #define TDS_CALIBRATION_FACTOR 0.5f  // Adjust based on calibration
 #define TDS_DEFAULT_TEMPERATURE 25.0f
 
-// Turbidity sensor calibration constants
-#define TURBIDITY_CLEAR_VOLTAGE 2.5f
-#define TURBIDITY_MUDDY_VOLTAGE 4.2f
+// Turbidity sensor calibration constsnts (Didn't able to deduce anything, whatever the Turbidity, output voltage < 0.2V)
+#define TURBIDITY_CLEAR_VOLTAGE 0.0f //probably
+#define TURBIDITY_MUDDY_VOLTAGE 3.3f
 #define TURBIDITY_CLEAR_NTU 0.0f
 #define TURBIDITY_MUDDY_NTU 1000.0f
 
 // Temperature sensor constants
 #define TEMP_OFFSET 0.5f
 #define TEMP_SCALE_FACTOR 0.1f
+#define TEMP_30_VOLTAGE 0.90  // Averaged for 10 Values (Very high variation (from about 80 to 100 including outliers in between 65 - 75 for about every 10 reading))
+#define TEMP_45_VOLTAGE 0.96 // Same very high variation
 
 // WiFi Configuration
-#define WIFI_SSID "YourWiFiSSID"
-#define WIFI_PASSWORD "YourWiFiPassword"
+#define WIFI_SSID "Chiki Chiki Bamba"
+#define WIFI_PASSWORD "DiscreteFourierTransform"
 
 // MQTT Configuration
-#define MQTT_BROKER "409d3402dbeb4499af4b08c7dd40dbc1.s1.eu.hivemq.cloud"  // MQTT broker address
+#define MQTT_BROKER "5df16d8a5a1c438294a51cb556f6df87.s1.eu.hivemq.cloud"  // MQTT broker address
 #define MQTT_PORT 8883                  // MQTT broker port
 #define MQTT_USERNAME "swqms_iot"  // MQTT username
 #define MQTT_PASSWORD "Swqms123"  // MQTT password
