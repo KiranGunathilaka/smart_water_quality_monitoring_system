@@ -14,6 +14,7 @@ unsigned long lastSampleTime = 0;
 unsigned long lastPublishTime = 0;
 
 void setup()
+
 {
   // Initialize serial communication
   Serial.begin(SERIAL_BAUD_RATE);
@@ -33,6 +34,17 @@ void setup()
 
   // Initialize WiFi
   wifiManager.init();
+
+  // Synchronize time via NTP
+  configTime(19800, 0, "pool.ntp.org", "time.nist.gov");  
+
+  Serial.println("Waiting for NTP time sync...");
+  while (time(nullptr) < 100000) { 
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println();
+  Serial.println("Time synchronized.");
 
   // Initialize MQTT client
   mqttClient.init();
