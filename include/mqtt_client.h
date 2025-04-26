@@ -110,15 +110,15 @@ public:
     }
     
     // Send water quality data via MQTT
-    bool publishWaterData(float ph, float tds, float turbidity, float temperature) {
+    bool publishWaterData(String time, float ph, float tds, float turbidity, float temperature) {
         if (!client.connected()) {
             return false;
         }
         
         // Create JSON message
         snprintf(jsonBuffer, sizeof(jsonBuffer),
-                "{\"deviceId\":\"%s\",\"timestamp\":%lu,\"ph\":%.2f,\"tds\":%.1f,\"turbidity\":%.1f,\"temperature\":%.1f}",
-                deviceId, millis(), ph, tds, turbidity, temperature);
+                "{\"deviceId\":\"%s\",\"timestamp\":\"%s\",\"ph\":%.2f,\"tds\":%.1f,\"turbidity\":%.1f,\"temperature\":%.1f}",
+                deviceId, time.c_str(), ph, tds, turbidity, temperature);
         
         // Publish to water quality topic
         return client.publish(MQTT_DATA_TOPIC, jsonBuffer, true);
