@@ -33,8 +33,6 @@ private:
         Serial.print(topic);
         Serial.print(", Message: ");
         Serial.println(message);
-        
-        // Handle incoming messages here if needed
     }
     
     // Attempt to reconnect to MQTT broker
@@ -50,7 +48,6 @@ private:
         if (client.connect(deviceId, MQTT_USERNAME, MQTT_PASSWORD)) {
             Serial.println("connected");
             
-            // Subscribe to any necessary topics
             client.subscribe(MQTT_COMMAND_TOPIC);
             
             return true;
@@ -64,17 +61,14 @@ private:
 
 public:
     MQTTClient() : client(espClient) {
-        // Create a unique device ID using ESP's MAC address
         uint8_t mac[6];
         WiFi.macAddress(mac);
         sprintf(deviceId, "ESP32_%02X%02X%02X", mac[3], mac[4], mac[5]);
     }
     
     void init() {
-        // Skip certificate verification (only for testing/development)
         espClient.setInsecure();
         
-        // Set server and port
         client.setServer(MQTT_BROKER, MQTT_PORT);
         
         // Set callback function for incoming messages
@@ -125,4 +119,4 @@ public:
     }
 };
 
-#endif // MQTT_CLIENT_H
+#endif 

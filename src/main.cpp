@@ -4,38 +4,30 @@
 #include "wifi_manager.h"
 #include "mqtt_client.h"
 
-// Create instances of our classes
 WaterSensors waterSensors;
 WiFiManager wifiManager;
 MQTTClient mqttClient;
 
-// Timer variables for non-blocking operation
 unsigned long lastSampleTime = 0;
 unsigned long lastPublishTime = 0;
 
 void setup()
 
 {
-  // Initialize serial communication
   Serial.begin(SERIAL_BAUD_RATE);
 
-  // Wait for serial connection to establish
-  delay(100);
-
-  // Print welcome message
   Serial.println();
   Serial.println("=======================================");
   Serial.println(" Water Quality Monitoring System v1.0");
   Serial.println("=======================================");
 
-  // Initialize sensors
+
   waterSensors.init();
   Serial.println("Sensors initialized.");
 
-  // Initialize WiFi
   wifiManager.init();
 
-  // Synchronize time via NTP
+  // Synchronize time via NTP with ESP32s RTC
   configTime(19800, 0, "pool.ntp.org", "time.nist.gov");  
 
   Serial.println("Waiting for NTP time sync...");
@@ -46,7 +38,7 @@ void setup()
   Serial.println();
   Serial.println("Time synchronized.");
 
-  // Initialize MQTT client
+
   mqttClient.init();
 
   Serial.println("System initialization complete. Starting measurements...");
@@ -57,10 +49,10 @@ void loop()
 {
   unsigned long currentTime = millis();
 
-  // Handle WiFi connection
+
   wifiManager.wifi_reconnect();
 
-  // Handle MQTT connection if WiFi is connected
+
   if (wifiManager.isConnected())
   {
     mqttClient.loop();
@@ -69,23 +61,19 @@ void loop()
   // Check if it's time to take another sample
   if (currentTime - lastSampleTime >= SAMPLE_INTERVAL)
   {
-    // Update last sample time
+
     lastSampleTime = currentTime;
-
-    // Read all sensors
     waterSensors.readSensors();
-
-    // Print the results to serial
     waterSensors.printReadings();
   }
 
   // Check if it's time to publish data to MQTT
   if (currentTime - lastPublishTime >= MQTT_PUBLISH_INTERVAL)
   {
-    // Update last publish time
+
     lastPublishTime = currentTime;
 
-    // If we have a connection to MQTT broker, publish the data
+
     if (wifiManager.isConnected() && mqttClient.isConnected())
     {
       time_t now = time(nullptr);

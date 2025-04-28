@@ -127,7 +127,6 @@ public:
 
     void printReadings() {
         
-        // Temperature readings
         Serial.print("Temperature: ");
         Serial.print(temperatureValue, 1);
         Serial.print(" °C (Raw: ");
@@ -136,7 +135,6 @@ public:
         Serial.print(tempVoltage, 2);
         Serial.print("V)");
         
-        // pH readings
         Serial.print("   pH: ");
         Serial.print(phValue, 2);
         Serial.print(" (Raw: ");
@@ -145,7 +143,6 @@ public:
         Serial.print(phVoltage, 2);
         Serial.print("V)");
         
-        // TDS readings
         Serial.print("   TDS: ");
         Serial.print(tdsValue, 0);
         Serial.print(" ppm (Raw: ");
@@ -154,7 +151,6 @@ public:
         Serial.print(tdsVoltage, 2);
         Serial.print("V)");
         
-        // Turbidity readings
         Serial.print("   Turbidity: ");
         Serial.print(turbidityValue, 0);
         Serial.print(" NTU (Raw: ");
@@ -165,4 +161,4 @@ public:
     }
 };
 
-#endif // SENSORS_H
+#endif 
