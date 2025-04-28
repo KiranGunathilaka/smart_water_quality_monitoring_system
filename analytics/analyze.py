@@ -117,19 +117,5 @@ plot_smoothed('Smoothed TDS', df['timestamp'], df['tds'], df['tds_smooth'], 'TDS
 plot_smoothed('Smoothed Turbidity', df['timestamp'], df['turbidity'], df['turbidity_smooth'], 'Turbidity (NTU)', filename='analytics/output/smoothed_turbidity.png')
 plot_smoothed('Smoothed Temperature', df['timestamp'], df['temperature'], df['temperature_smooth'], 'Temperature (Celsius)', filename='analytics/output/smoothed_temperature.png')
 
-# Step 12: Final Report
-with open('analytics/output/final_report.txt', 'w') as f:
-    f.write("Smart Water Quality Monitoring System - Advanced Analytics Report\n\n")
-    f.write("1. Data was collected in 3 sessions per day (Morning, Afternoon, Evening) with 5-second intervals.\n")
-    f.write("2. Basic descriptive statistics are saved in 'basic_statistics.csv'.\n")
-    f.write("3. Daily and session-wise statistics are saved in 'daily_session_mean.csv'.\n")
-    f.write("4. Anomalies (high turbidity >2 NTU, unsafe pH) are recorded in respective CSVs.\n")
-    f.write("5. Correlation between parameters visualized in 'correlation_heatmap.png'.\n")
-    f.write("6. Trends plotted for each parameter separately, both original and smoothed.\n")
-    f.write("7. Observations: \n")
-    f.write("   - TDS and Turbidity show moderate positive correlation.\n")
-    f.write("   - Afternoon sessions tend to show slightly higher temperature and TDS levels.\n")
-    f.write("   - pH remains relatively stable except minor dips during evening sessions.\n")
-    f.write("   - Multiple high turbidity events detected especially towards late evenings.\n")
 
 print("\nAll updated analytics completed and saved in 'analytics/output/' folder.")
