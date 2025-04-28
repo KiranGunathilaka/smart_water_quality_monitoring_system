@@ -1,6 +1,6 @@
 Do not have this when submitting.
 
-For your generated dataset (covering 2025-04-14 to 2025-04-20), the data was created for three 2-hour sessions each day, based on your request:
+For the generated dataset (covering 2025-04-14 to 2025-04-20), the data was created for three 2-hour sessions each day, based on your request:
 🕒 Time Ranges per Day (in local time, UTC+5:30 assumed):
 
     Morning session: 06:00:00 → 07:59:55
