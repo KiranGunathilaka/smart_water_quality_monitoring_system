@@ -111,7 +111,7 @@ public:
         
         // Create JSON message
         snprintf(jsonBuffer, sizeof(jsonBuffer),
-                "{\"deviceId\":\"%s\",\"timestamp\":\"%s\",\"ph\":%.2f,\"tds\":%.1f,\"turbidity\":%.1f,\"temperature\":%.1f}",
+                "{\"deviceId\":\"%s\",\"timestamp\":\"%s\",\"ph\":%.2f,\"tds\":%.1f,\"turbidity\":%.2f,\"temperature\":%.1f}",
                 deviceId, time.c_str(), ph, tds, turbidity, temperature);
         
         // Publish to water quality topic

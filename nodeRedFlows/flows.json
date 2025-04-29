@@ -1,6 +1,6 @@
 [
     {
-        "id": "c67588a7e974742a",
+        "id": "b06c23d8080bf66f",
         "type": "tab",
         "label": "Water Quality Dashboard",
         "disabled": false,
@@ -8,9 +8,9 @@
         "env": []
     },
     {
-        "id": "eb6b4378b67e1a95",
+        "id": "ea958e55d200415f",
         "type": "mqtt in",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "WaterData",
         "topic": "reservoir/water_quality/data",
         "qos": "0",
@@ -24,18 +24,17 @@
         "y": 320,
         "wires": [
             [
-                "d4a4a271d5049cf1",
-                "589d66e97f3a7e5f",
-                "d419e274a40ea53c",
-                "96b36936243add71",
-                "d7ba2411042c7f62"
+                "08cc27806df23f2c",
+                "8343729606e7291a",
+                "590c01d021a7aba0",
+                "0d97cc0df17087e9"
             ]
         ]
     },
     {
-        "id": "d4a4a271d5049cf1",
+        "id": "08cc27806df23f2c",
         "type": "debug",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "debug 1",
         "active": true,
         "tosidebar": true,
@@ -50,12 +49,12 @@
         "wires": []
     },
     {
-        "id": "d419e274a40ea53c",
+        "id": "8343729606e7291a",
         "type": "function",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "Format Dashboard Data",
-        "func": "// Add timestamp for charts\nif (!msg.payload.timestamp_iso) {\n    // Handle the new timestamp format or use current date if timestamp is invalid\n    try {\n        // Parse the timestamp if it's in the format \"10:20:13 15 04 2025\"\n        let timestampStr = msg.payload.timestamp;\n        \n        // Check if timestamp is a string with the time and date format\n        if (typeof timestampStr === 'string' && timestampStr.includes(':')) {\n            // Extract the components from \"10:20:13 15 04 2025\"\n            let parts = timestampStr.split(' ');\n            if (parts.length >= 3) {\n                let time = parts[0]; // \"10:20:13\"\n                let day = parts[1];  // \"15\"\n                let month = parts[2]; // \"04\"\n                let year = parts[3];  // \"2025\"\n                \n                // Create an ISO date string\n                msg.payload.timestamp_iso = `${year}-${month}-${day}T${time}`;\n            } else {\n                // Fallback to current time if format doesn't match\n                msg.payload.timestamp_iso = new Date().toISOString();\n            }\n        } else {\n            // Fallback to current time\n            msg.payload.timestamp_iso = new Date().toISOString();\n        }\n    } catch (e) {\n        // If any parsing error occurs, use current time\n        msg.payload.timestamp_iso = new Date().toISOString();\n    }\n}\n\n// Parse numeric values to ensure they're numbers not strings\nmsg.payload.ph = parseFloat(msg.payload.ph) || 0;\nmsg.payload.tds = parseFloat(msg.payload.tds) || 0;\nmsg.payload.turbidity = parseFloat(msg.payload.turbidity) || 0;\nmsg.payload.temperature = parseFloat(msg.payload.temperature) || 0;\n\n// Create separate messages for each gauge\nvar ph = { payload: msg.payload.ph, topic: \"pH\" };\nvar tds = { payload: msg.payload.tds, topic: \"TDS\" };\nvar turbidity = { payload: msg.payload.turbidity, topic: \"Turbidity\" };\nvar temperature = { payload: msg.payload.temperature, topic: \"Temperature\" };\n\n// Create messages for status indicators\nvar phStatus = { payload: getPhStatus(msg.payload.ph) };\nvar tdsStatus = { payload: getTdsStatus(msg.payload.tds) };\nvar turbidityStatus = { payload: getTurbidityStatus(msg.payload.turbidity) };\nvar tempStatus = { payload: getTemperatureStatus(msg.payload.temperature) };\n\n// Helper functions for status determination\nfunction getPhStatus(value) {\n    if (value >= 6.5 && value <= 8.5) return \"Normal\";\n    else if (value < 6.5) return \"Acidic\";\n    else return \"Alkaline\";\n}\n\nfunction getTdsStatus(value) {\n    if (value < 300) return \"Excellent\";\n    else if (value >= 300 && value <= 600) return \"Good\";\n    else if (value > 600 && value <= 900) return \"Fair\";\n    else return \"Poor\";\n}\n\nfunction getTurbidityStatus(value) {\n    if (value < 5) return \"Clear\";\n    else if (value >= 5 && value <= 10) return \"Slightly Cloudy\";\n    else return \"Cloudy\";\n}\n\nfunction getTemperatureStatus(value) {\n    if (value >= 20 && value <= 30) return \"Optimal\";\n    else if (value < 20) return \"Cold\";\n    else return \"Hot\";\n}\n\n// Return all messages\nreturn [msg.payload, ph, tds, turbidity, temperature, phStatus, tdsStatus, turbidityStatus, tempStatus];",
-        "outputs": 9,
+        "func": "// Add timestamp for charts\nif (!msg.payload.timestamp_iso) {\n    // Handle the new timestamp format or use current date if timestamp is invalid\n    try {\n        // Check if timestamp is already a Date object or ISOString\n        if (msg.payload.timestamp instanceof Date || (typeof msg.payload.timestamp === 'string' && !isNaN(Date.parse(msg.payload.timestamp)))) {\n            msg.payload.timestamp_iso = new Date(msg.payload.timestamp).toISOString();\n        }\n        // Check if timestamp is a string with the time and date format\n        else if (typeof msg.payload.timestamp === 'string' && msg.payload.timestamp.includes(':')) {\n            // Extract the components from \"10:20:13 15 04 2025\"\n            let parts = msg.payload.timestamp.split(' ');\n            if (parts.length >= 3) {\n                let time = parts[0]; // \"10:20:13\"\n                let day = parts[1];  // \"15\"\n                let month = parts[2]; // \"04\"\n                let year = parts[3];  // \"2025\"\n                \n                // Create an ISO date string\n                msg.payload.timestamp_iso = `${year}-${month}-${day}T${time}`;\n            } else {\n                // Fallback to current time if format doesn't match\n                msg.payload.timestamp_iso = new Date().toISOString();\n            }\n        } else {\n            // Fallback to current time\n            msg.payload.timestamp_iso = new Date().toISOString();\n        }\n    } catch (e) {\n        // If any parsing error occurs, use current time\n        msg.payload.timestamp_iso = new Date().toISOString();\n    }\n}\n\n// Create a copy of the original message for the device info\nvar deviceInfoMsg = { payload: { ...msg.payload } };\n\n// Parse numeric values to ensure they're numbers not strings\nmsg.payload.ph = parseFloat(msg.payload.ph) || 0;\nmsg.payload.tds = parseFloat(msg.payload.tds) || 0;\nmsg.payload.turbidity = parseFloat(msg.payload.turbidity) || 0;\nmsg.payload.temperature = parseFloat(msg.payload.temperature) || 0;\n\n// Create chart data (with timestamps and all parameters)\nvar chartData = {\n    payload: [\n        { topic: \"pH\", payload: msg.payload.ph, timestamp: msg.payload.timestamp_iso },\n        { topic: \"TDS\", payload: msg.payload.tds, timestamp: msg.payload.timestamp_iso },\n        { topic: \"Turbidity\", payload: msg.payload.turbidity, timestamp: msg.payload.timestamp_iso },\n        { topic: \"Temperature\", payload: msg.payload.temperature, timestamp: msg.payload.timestamp_iso }\n    ]\n};\n\n// Create separate messages for each gauge\nvar ph = { payload: msg.payload.ph, topic: \"pH\" };\nvar tds = { payload: msg.payload.tds, topic: \"TDS\" };\nvar turbidity = { payload: msg.payload.turbidity, topic: \"Turbidity\" };\nvar temperature = { payload: msg.payload.temperature, topic: \"Temperature\" };\n\n// Create messages for status indicators\nvar phStatus = { payload: getPhStatus(msg.payload.ph) };\nvar tdsStatus = { payload: getTdsStatus(msg.payload.tds) };\nvar turbidityStatus = { payload: getTurbidityStatus(msg.payload.turbidity) };\nvar tempStatus = { payload: getTemperatureStatus(msg.payload.temperature) };\n\n// Helper functions for status determination\nfunction getPhStatus(value) {\n    if (value >= 6.5 && value <= 8.5) return \"Normal\";\n    else if (value < 6.5) return \"Acidic\";\n    else return \"Alkaline\";\n}\n\nfunction getTdsStatus(value) {\n    if (value < 300) return \"Excellent\";\n    else if (value >= 300 && value <= 600) return \"Good\";\n    else if (value > 600 && value <= 900) return \"Fair\";\n    else return \"Poor\";\n}\n\nfunction getTurbidityStatus(value) {\n    if (value < 5) return \"Clear\";\n    else if (value >= 5 && value <= 10) return \"Slightly Cloudy\";\n    else return \"Cloudy\";\n}\n\nfunction getTemperatureStatus(value) {\n    if (value >= 20 && value <= 30) return \"Optimal\";\n    else if (value < 20) return \"Cold\";\n    else return \"Hot\";\n}\n\n// Return all messages\nreturn [chartData, ph, tds, turbidity, temperature, phStatus, tdsStatus, turbidityStatus, tempStatus, deviceInfoMsg];",
+        "outputs": 10,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -65,38 +64,41 @@
         "y": 180,
         "wires": [
             [
-                "99b2bd1d7ee9a484"
+                "b1384eafb1fdb4d4"
             ],
             [
-                "1ac088fd1e98418c"
+                "e0441cf4ce37f786"
             ],
             [
-                "5e93f07d163c0d50"
+                "b4346246fd4a4578"
             ],
             [
-                "52bdabec72829628"
+                "be26fc7075d9a7ec"
             ],
             [
-                "1e201de9e0bdf244"
+                "78b8d1b30c792681"
             ],
             [
-                "326afcb493c5a620"
+                "36110bef05607f11"
             ],
             [
-                "6a7a46e352ad906e"
+                "5ef569decf9e3f40"
             ],
             [
-                "2574d975c6b6beea"
+                "a96111223511eff2"
             ],
             [
-                "57f67ebe5c289452"
+                "9d6d11a01d7f4b1b"
+            ],
+            [
+                "5f3c3f848455dbcb"
             ]
         ]
     },
     {
-        "id": "96b36936243add71",
+        "id": "590c01d021a7aba0",
         "type": "function",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "Calculate Water Quality Index",
         "func": "// Simple Water Quality Index calculation\nvar ph = msg.payload.ph;\nvar tds = msg.payload.tds;\nvar turbidity = msg.payload.turbidity;\nvar temperature = msg.payload.temperature;\n\n// Normalize values to 0-100 scale\nvar phScore = calculatePhScore(ph);\nvar tdsScore = calculateTdsScore(tds);\nvar turbidityScore = calculateTurbidityScore(turbidity);\nvar tempScore = calculateTempScore(temperature);\n\n// Calculate overall WQI (simple average)\nvar wqi = (phScore + tdsScore + turbidityScore + tempScore) / 4;\n\n// Quality classification\nvar quality = \"\";\nif (wqi >= 90) quality = \"Excellent\";\nelse if (wqi >= 70) quality = \"Good\";\nelse if (wqi >= 50) quality = \"Fair\";\nelse if (wqi >= 25) quality = \"Poor\";\nelse quality = \"Very Poor\";\n\n// Helper functions for parameter scoring\nfunction calculatePhScore(value) {\n    if (value >= 6.5 && value <= 7.5) return 100;\n    else if (value >= 6.0 && value < 6.5) return 80;\n    else if (value > 7.5 && value <= 8.5) return 80;\n    else if (value >= 5.0 && value < 6.0) return 60;\n    else if (value > 8.5 && value <= 9.0) return 60;\n    else return 30;\n}\n\nfunction calculateTdsScore(value) {\n    if (value < 300) return 100;\n    else if (value >= 300 && value <= 600) return 80;\n    else if (value > 600 && value <= 900) return 60;\n    else if (value > 900 && value <= 1200) return 40;\n    else return 20;\n}\n\nfunction calculateTurbidityScore(value) {\n    if (value < 1) return 100;\n    else if (value >= 1 && value < 5) return 80;\n    else if (value >= 5 && value <= 10) return 60;\n    else if (value > 10 && value <= 15) return 40;\n    else return 20;\n}\n\nfunction calculateTempScore(value) {\n    if (value >= 20 && value <= 30) return 100;\n    else if ((value >= 15 && value < 20) || (value > 30 && value <= 35)) return 80;\n    else if ((value >= 10 && value < 15) || (value > 35 && value <= 40)) return 60;\n    else return 40;\n}\n\n// Create messages for WQI gauge and status\nvar wqiGauge = { payload: Math.round(wqi), topic: \"WQI\" };\nvar wqiStatus = { payload: quality };\n\nreturn [wqiGauge, wqiStatus];",
         "outputs": 2,
@@ -109,17 +111,17 @@
         "y": 620,
         "wires": [
             [
-                "23ca74c226efb970"
+                "c4681334d5e6eb71"
             ],
             [
-                "6a363c97b8166962"
+                "878e3e5710e8f44b"
             ]
         ]
     },
     {
-        "id": "326afcb493c5a620",
+        "id": "36110bef05607f11",
         "type": "ui_text",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "group": "fa13a851934c06de",
         "order": 1,
         "width": "6",
@@ -134,9 +136,9 @@
         "wires": []
     },
     {
-        "id": "6a7a46e352ad906e",
+        "id": "5ef569decf9e3f40",
         "type": "ui_text",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "group": "fa13a851934c06de",
         "order": 2,
         "width": "6",
@@ -151,9 +153,9 @@
         "wires": []
     },
     {
-        "id": "2574d975c6b6beea",
+        "id": "a96111223511eff2",
         "type": "ui_text",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "group": "fa13a851934c06de",
         "order": 3,
         "width": "6",
@@ -168,9 +170,9 @@
         "wires": []
     },
     {
-        "id": "57f67ebe5c289452",
+        "id": "9d6d11a01d7f4b1b",
         "type": "ui_text",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "group": "fa13a851934c06de",
         "order": 4,
         "width": "6",
@@ -185,9 +187,9 @@
         "wires": []
     },
     {
-        "id": "6a363c97b8166962",
+        "id": "878e3e5710e8f44b",
         "type": "ui_text",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "group": "86815b0d92fb9776",
         "order": 2,
         "width": "12",
@@ -206,9 +208,9 @@
         "wires": []
     },
     {
-        "id": "1ac088fd1e98418c",
+        "id": "e0441cf4ce37f786",
         "type": "ui_gauge",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "pH Gauge",
         "group": "8b3cf9e1355c6229",
         "order": 1,
@@ -233,9 +235,9 @@
         "wires": []
     },
     {
-        "id": "5e93f07d163c0d50",
+        "id": "b4346246fd4a4578",
         "type": "ui_gauge",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "TDS Gauge",
         "group": "8b3cf9e1355c6229",
         "order": 2,
@@ -260,9 +262,9 @@
         "wires": []
     },
     {
-        "id": "52bdabec72829628",
+        "id": "be26fc7075d9a7ec",
         "type": "ui_gauge",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "Turbidity Gauge",
         "group": "8b3cf9e1355c6229",
         "order": 3,
@@ -273,7 +275,7 @@
         "label": "NTU",
         "format": "{{value}}",
         "min": 0,
-        "max": "20",
+        "max": "300",
         "colors": [
             "#00b500",
             "#e6e600",
@@ -281,15 +283,16 @@
         ],
         "seg1": "5",
         "seg2": "10",
+        "diff": false,
         "className": "",
         "x": 740,
         "y": 260,
         "wires": []
     },
     {
-        "id": "1e201de9e0bdf244",
+        "id": "78b8d1b30c792681",
         "type": "ui_gauge",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "Temperature Gauge",
         "group": "8b3cf9e1355c6229",
         "order": 4,
@@ -314,9 +317,9 @@
         "wires": []
     },
     {
-        "id": "23ca74c226efb970",
+        "id": "c4681334d5e6eb71",
         "type": "ui_gauge",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "WQI Gauge",
         "group": "86815b0d92fb9776",
         "order": 1,
@@ -342,14 +345,14 @@
         "wires": []
     },
     {
-        "id": "99b2bd1d7ee9a484",
+        "id": "b1384eafb1fdb4d4",
         "type": "ui_chart",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "name": "Water Quality History",
         "group": "ae3382f91f195f93",
         "order": 1,
         "width": "24",
-        "height": "6",
+        "height": "8",
         "label": "Water Quality Parameters History",
         "chartType": "line",
         "legend": "true",
@@ -360,7 +363,7 @@
         "ymin": "",
         "ymax": "",
         "removeOlder": "10",
-        "removeOlderPoints": "",
+        "removeOlderPoints": "100",
         "removeOlderUnit": "60",
         "cutout": 0,
         "useOneColor": false,
@@ -386,30 +389,30 @@
         ]
     },
     {
-        "id": "3fb7f6bedd3aa57e",
+        "id": "5f3c3f848455dbcb",
         "type": "ui_template",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "group": "cc546d0ef79bf5ac",
         "name": "Device Info",
         "order": 1,
         "width": "24",
         "height": "2",
-        "format": "<div style=\"text-align: center; width: 100%;\">\n    <h3>Smart Water Quality Monitoring System</h3>\n    <p>Last device ID: {{msg.payload.deviceId}} | Last updated: {{msg.payload.timestamp_iso}}</p>\n</div>",
-        "storeOutMessages": false,
-        "fwdInMessages": false,
-        "resendOnRefresh": false,
+        "format": "<div style=\"text-align: center; width: 100%;\">\n    <h4>Device ID: {{msg.payload.deviceId || 'Unknown'}} </h4> \n    <br>\n    <br>\n    <h4> Last updated: {{msg.payload.timestamp_iso || 'Not available'}}</h4>\n</div>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
         "templateScope": "local",
         "className": "",
-        "x": 1010,
-        "y": 380,
+        "x": 730,
+        "y": 540,
         "wires": [
             []
         ]
     },
     {
-        "id": "d7ba2411042c7f62",
+        "id": "0d97cc0df17087e9",
         "type": "mongodb3 in",
-        "z": "c67588a7e974742a",
+        "z": "b06c23d8080bf66f",
         "service": "_ext_",
         "configNode": "5025d7188d38d556",
         "name": "mongoDB",
@@ -456,16 +459,18 @@
     {
         "id": "fa13a851934c06de",
         "type": "ui_group",
-        "name": "a1b2c3d4e5f67890",
+        "name": "Parameter Status",
         "tab": "5f1eaf98fb9b6835",
         "order": 1,
         "disp": true,
-        "width": 6
+        "width": 6,
+        "collapse": false,
+        "className": ""
     },
     {
         "id": "86815b0d92fb9776",
         "type": "ui_group",
-        "name": "c9d8e7f6a5b4c321",
+        "name": "Overall Quality",
         "tab": "5f1eaf98fb9b6835",
         "order": 5,
         "disp": true,
@@ -476,16 +481,18 @@
     {
         "id": "8b3cf9e1355c6229",
         "type": "ui_group",
-        "name": "f1e2d3c4b5a67890",
+        "name": "Current Readings",
         "tab": "5f1eaf98fb9b6835",
         "order": 3,
         "disp": true,
-        "width": 6
+        "width": 6,
+        "collapse": false,
+        "className": ""
     },
     {
         "id": "ae3382f91f195f93",
         "type": "ui_group",
-        "name": "e98f7d6c5b4a32e1",
+        "name": "History",
         "tab": "5f1eaf98fb9b6835",
         "order": 4,
         "disp": true,
@@ -496,7 +503,7 @@
     {
         "id": "cc546d0ef79bf5ac",
         "type": "ui_group",
-        "name": "b0a9c8d7e6f5b432",
+        "name": "Device Info",
         "tab": "5f1eaf98fb9b6835",
         "order": 2,
         "disp": true,

@@ -24,6 +24,12 @@ private:
     float turbidityValue; // in NTU (Nephelometric Turbidity Units)
     float temperatureValue; // in Celsius
     
+    // Moving average for pH readings
+    static const int MAX_PH_WINDOW_SIZE = 10; // Maximum possible window size
+    float phReadings[MAX_PH_WINDOW_SIZE];     // Array to store readings
+    int phWindowSize;                         // Current window size
+    int phReadingIndex;                       // Current index in the circular buffer
+    
     // Convert raw ADC value to voltage
     float rawToVoltage(int rawValue) {
         return rawValue * (VOLTAGE_REF / ADC_RESOLUTION);
@@ -32,6 +38,23 @@ private:
     // Convert pH voltage to pH value
     float convertVoltageToPH(float voltage) {
         return 7.0f - ((voltage - PH_7_VOLTAGE) / PH_CALIBRATION_SLOPE);
+    }
+    
+    // Calculate moving average for pH readings
+    float calculatePhMovingAverage() {
+        float sum = 0.0f;
+        int count = 0;
+        
+        // Count how many valid readings we have
+        for (int i = 0; i < phWindowSize; i++) {
+            if (phReadings[i] != 0.0f || count > 0) { // Skip initial zeros unless we've already started recording
+                sum += phReadings[i];
+                count++;
+            }
+        }
+        
+        // Return average if we have readings, otherwise return 0
+        return (count > 0) ? (sum / count) : 0.0f;
     }
     
     // Convert TDS voltage to TDS value (ppm)
@@ -77,14 +100,41 @@ public:
         phRawValue = tdsRawValue = turbidityRawValue = tempRawValue = 0;
         phVoltage = tdsVoltage = turbidityVoltage = tempVoltage = 0.0f;
         phValue = tdsValue = turbidityValue = temperatureValue = 0.0f;
+        
+        // Initialize moving average filter
+        phWindowSize = 5; // Default window size
+        phReadingIndex = 0;
+        
+        // Initialize the pH readings array
+        for (int i = 0; i < MAX_PH_WINDOW_SIZE; i++) {
+            phReadings[i] = 0.0f;
+        }
     }
 
     void init() {
-        // not necessary
+        // Configure input pins
         pinMode(PH_PIN, INPUT);
         pinMode(TDS_PIN, INPUT);
         pinMode(TURBIDITY_PIN, INPUT);
         pinMode(TEMP_PIN, INPUT);
+    }
+    
+    // Set the window size for pH moving average filter
+    void setPhWindowSize(int size) {
+        if (size > 0 && size <= MAX_PH_WINDOW_SIZE) {
+            phWindowSize = size;
+            
+            // Reset the array when changing window size
+            for (int i = 0; i < MAX_PH_WINDOW_SIZE; i++) {
+                phReadings[i] = 0.0f;
+            }
+            phReadingIndex = 0;
+        }
+    }
+    
+    // Get current window size
+    int getPhWindowSize() {
+        return phWindowSize;
     }
     
     void readSensors() {
@@ -102,7 +152,18 @@ public:
         
         // Process voltages to actual values
         temperatureValue = convertVoltageToTemperature(tempVoltage);
-        phValue = convertVoltageToPH(phVoltage);
+        
+        // Calculate pH value and add to moving average
+        float currentPhValue = convertVoltageToPH(phVoltage);
+        
+        // Store the current pH reading in the array
+        phReadings[phReadingIndex] = currentPhValue;
+        phReadingIndex = (phReadingIndex + 1) % phWindowSize; // Increment index and wrap around
+        
+        // Calculate the moving average pH value
+        phValue = calculatePhMovingAverage();
+        
+        // Process other sensor values
         tdsValue = convertVoltageToTDS(tdsVoltage, temperatureValue); // Use actual temperature for compensation
         turbidityValue = convertVoltageToTurbidity(turbidityVoltage);
     }
@@ -125,6 +186,11 @@ public:
     int getTurbidityRaw() { return turbidityRawValue; }
     int getTemperatureRaw() { return tempRawValue; }
 
+    // Get the current pH value without moving average (for comparison)
+    float getRawPH() { 
+        return convertVoltageToPH(phVoltage); 
+    }
+
     void printReadings() {
         
         Serial.print("Temperature: ");
@@ -136,7 +202,7 @@ public:
         Serial.print("V)");
         
         Serial.print("   pH: ");
-        Serial.print(phValue, 2);
+        Serial.print(phValue, 2);  // Display pH with 2 decimal places
         Serial.print(" (Raw: ");
         Serial.print(phRawValue);
         Serial.print(", Voltage: ");
@@ -144,7 +210,7 @@ public:
         Serial.print("V)");
         
         Serial.print("   TDS: ");
-        Serial.print(tdsValue, 0);
+        Serial.print(tdsValue, 1); // Display TDS with 1 decimal place instead of as integer
         Serial.print(" ppm (Raw: ");
         Serial.print(tdsRawValue);
         Serial.print(", Voltage: ");
@@ -152,7 +218,7 @@ public:
         Serial.print("V)");
         
         Serial.print("   Turbidity: ");
-        Serial.print(turbidityValue, 0);
+        Serial.print(turbidityValue, 2);  // Display turbidity with 2 decimal places
         Serial.print(" NTU (Raw: ");
         Serial.print(turbidityRawValue);
         Serial.print(", Voltage: ");
@@ -161,4 +227,4 @@ public:
     }
 };
 
-#endif 
+#endif

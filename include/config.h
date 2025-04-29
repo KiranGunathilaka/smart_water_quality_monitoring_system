@@ -19,6 +19,7 @@
 // pH sensor calibration constants
 #define PH_CALIBRATION_SLOPE -0.22f   // 3.3 * (3850/4095) / (14-0)   3850 is the maximum adc value practically reaching
 #define PH_7_VOLTAGE 1.58f
+static const int MAX_PH_WINDOW_SIZE = 10; // Maximum possible window size
 
 // TDS sensor calibration constants
 #define TDS_TEMPERATURE_COEFFICIENT 0.02f
@@ -29,7 +30,7 @@
 #define TURBIDITY_CLEAR_VOLTAGE 0.0f 
 #define TURBIDITY_MUDDY_VOLTAGE 3.3f
 #define TURBIDITY_CLEAR_NTU 0.0f
-#define TURBIDITY_MUDDY_NTU 1000.0f
+#define TURBIDITY_MUDDY_NTU 50.0f
 
 // Temperature sensor constants
 #define TEMP_OFFSET 0.5f
