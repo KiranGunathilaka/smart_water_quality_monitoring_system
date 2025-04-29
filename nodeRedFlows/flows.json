@@ -1,6 +1,6 @@
 [
     {
-        "id": "b06c23d8080bf66f",
+        "id": "cbdc5cf04f829c77",
         "type": "tab",
         "label": "Water Quality Dashboard",
         "disabled": false,
@@ -8,13 +8,13 @@
         "env": []
     },
     {
-        "id": "ea958e55d200415f",
+        "id": "548a520db4081ce8",
         "type": "mqtt in",
-        "z": "b06c23d8080bf66f",
+        "z": "cbdc5cf04f829c77",
         "name": "WaterData",
         "topic": "reservoir/water_quality/data",
         "qos": "0",
-        "datatype": "auto-detect",
+        "datatype": "json",
         "broker": "ea598e900f46bb49",
         "nl": false,
         "rap": true,
@@ -24,17 +24,17 @@
         "y": 320,
         "wires": [
             [
-                "08cc27806df23f2c",
-                "8343729606e7291a",
-                "590c01d021a7aba0",
-                "0d97cc0df17087e9"
+                "a82456a7df7eb68a",
+                "a7d98f226c67bb9a",
+                "d013ea0e0f82147e",
+                "4625a113f2f382fe"
             ]
         ]
     },
     {
-        "id": "08cc27806df23f2c",
+        "id": "a82456a7df7eb68a",
         "type": "debug",
-        "z": "b06c23d8080bf66f",
+        "z": "cbdc5cf04f829c77",
         "name": "debug 1",
         "active": true,
         "tosidebar": true,
@@ -49,12 +49,12 @@
         "wires": []
     },
     {
-        "id": "8343729606e7291a",
+        "id": "a7d98f226c67bb9a",
         "type": "function",
-        "z": "b06c23d8080bf66f",
+        "z": "cbdc5cf04f829c77",
         "name": "Format Dashboard Data",
-        "func": "// Add timestamp for charts\nif (!msg.payload.timestamp_iso) {\n    // Handle the new timestamp format or use current date if timestamp is invalid\n    try {\n        // Check if timestamp is already a Date object or ISOString\n        if (msg.payload.timestamp instanceof Date || (typeof msg.payload.timestamp === 'string' && !isNaN(Date.parse(msg.payload.timestamp)))) {\n            msg.payload.timestamp_iso = new Date(msg.payload.timestamp).toISOString();\n        }\n        // Check if timestamp is a string with the time and date format\n        else if (typeof msg.payload.timestamp === 'string' && msg.payload.timestamp.includes(':')) {\n            // Extract the components from \"10:20:13 15 04 2025\"\n            let parts = msg.payload.timestamp.split(' ');\n            if (parts.length >= 3) {\n                let time = parts[0]; // \"10:20:13\"\n                let day = parts[1];  // \"15\"\n                let month = parts[2]; // \"04\"\n                let year = parts[3];  // \"2025\"\n                \n                // Create an ISO date string\n                msg.payload.timestamp_iso = `${year}-${month}-${day}T${time}`;\n            } else {\n                // Fallback to current time if format doesn't match\n                msg.payload.timestamp_iso = new Date().toISOString();\n            }\n        } else {\n            // Fallback to current time\n            msg.payload.timestamp_iso = new Date().toISOString();\n        }\n    } catch (e) {\n        // If any parsing error occurs, use current time\n        msg.payload.timestamp_iso = new Date().toISOString();\n    }\n}\n\n// Create a copy of the original message for the device info\nvar deviceInfoMsg = { payload: { ...msg.payload } };\n\n// Parse numeric values to ensure they're numbers not strings\nmsg.payload.ph = parseFloat(msg.payload.ph) || 0;\nmsg.payload.tds = parseFloat(msg.payload.tds) || 0;\nmsg.payload.turbidity = parseFloat(msg.payload.turbidity) || 0;\nmsg.payload.temperature = parseFloat(msg.payload.temperature) || 0;\n\n// Create chart data (with timestamps and all parameters)\nvar chartData = {\n    payload: [\n        { topic: \"pH\", payload: msg.payload.ph, timestamp: msg.payload.timestamp_iso },\n        { topic: \"TDS\", payload: msg.payload.tds, timestamp: msg.payload.timestamp_iso },\n        { topic: \"Turbidity\", payload: msg.payload.turbidity, timestamp: msg.payload.timestamp_iso },\n        { topic: \"Temperature\", payload: msg.payload.temperature, timestamp: msg.payload.timestamp_iso }\n    ]\n};\n\n// Create separate messages for each gauge\nvar ph = { payload: msg.payload.ph, topic: \"pH\" };\nvar tds = { payload: msg.payload.tds, topic: \"TDS\" };\nvar turbidity = { payload: msg.payload.turbidity, topic: \"Turbidity\" };\nvar temperature = { payload: msg.payload.temperature, topic: \"Temperature\" };\n\n// Create messages for status indicators\nvar phStatus = { payload: getPhStatus(msg.payload.ph) };\nvar tdsStatus = { payload: getTdsStatus(msg.payload.tds) };\nvar turbidityStatus = { payload: getTurbidityStatus(msg.payload.turbidity) };\nvar tempStatus = { payload: getTemperatureStatus(msg.payload.temperature) };\n\n// Helper functions for status determination\nfunction getPhStatus(value) {\n    if (value >= 6.5 && value <= 8.5) return \"Normal\";\n    else if (value < 6.5) return \"Acidic\";\n    else return \"Alkaline\";\n}\n\nfunction getTdsStatus(value) {\n    if (value < 300) return \"Excellent\";\n    else if (value >= 300 && value <= 600) return \"Good\";\n    else if (value > 600 && value <= 900) return \"Fair\";\n    else return \"Poor\";\n}\n\nfunction getTurbidityStatus(value) {\n    if (value < 5) return \"Clear\";\n    else if (value >= 5 && value <= 10) return \"Slightly Cloudy\";\n    else return \"Cloudy\";\n}\n\nfunction getTemperatureStatus(value) {\n    if (value >= 20 && value <= 30) return \"Optimal\";\n    else if (value < 20) return \"Cold\";\n    else return \"Hot\";\n}\n\n// Return all messages\nreturn [chartData, ph, tds, turbidity, temperature, phStatus, tdsStatus, turbidityStatus, tempStatus, deviceInfoMsg];",
-        "outputs": 10,
+        "func": "// Modified timestamp handling to preserve the exact time\nif (!msg.payload.timestamp_iso) {\n    try {\n        let exactTimestamp;\n        \n        // If timestamp is already in the payload and in the correct format\n        if (msg.payload.timestamp instanceof Date) {\n            exactTimestamp = msg.payload.timestamp;\n        }\n        // Handle string timestamp from payload\n        else if (typeof msg.payload.timestamp === 'string') {\n            if (msg.payload.timestamp.includes(':')) {\n                // Parse the custom format \"10:20:13 15 04 2025\"\n                let parts = msg.payload.timestamp.split(' ');\n                if (parts.length >= 3) {\n                    let timeStr = parts[0]; // \"10:20:13\"\n                    let day = parts[1];     // \"15\"\n                    let month = parts[2];   // \"04\"\n                    let year = parts[3] || new Date().getFullYear(); // Use current year if not provided\n                    \n                    // Create timestamp without timezone conversion\n                    let dateString = `${year}-${month.padStart(2, '0')}-${day.padStart(2, '0')}T${timeStr}`;\n                    \n                    // Use the local string representation directly\n                    exactTimestamp = new Date(dateString);\n                    \n                    // Important: Adjust for any local timezone offset to keep exact time\n                    // This prevents browser or Node.js from applying timezone shifts\n                    let offset = exactTimestamp.getTimezoneOffset() * 60000; // offset in milliseconds\n                    exactTimestamp = new Date(exactTimestamp.getTime() + offset);\n                } else {\n                    exactTimestamp = new Date();\n                }\n            } else {\n                // Handle other string formats or timestamps\n                exactTimestamp = new Date(msg.payload.timestamp);\n            }\n        } else {\n            // Fallback to current time\n            exactTimestamp = new Date();\n        }\n        \n        // Use this exact timestamp for all chart messages\n        \n        // Parse numeric values\n        msg.payload.ph = parseFloat(msg.payload.ph) || 0;\n        msg.payload.tds = parseFloat(msg.payload.tds) || 0;\n        msg.payload.turbidity = parseFloat(msg.payload.turbidity) || 0;\n        msg.payload.temperature = parseFloat(msg.payload.temperature) || 0;\n\n        // Create messages for charts with the exact timestamp\n        var phChart = { \n            payload: msg.payload.ph, \n            topic: \"pH\", \n            timestamp: exactTimestamp \n        };\n        var tdsChart = { \n            payload: msg.payload.tds, \n            topic: \"TDS\", \n            timestamp: exactTimestamp \n        };\n        var turbidityChart = { \n            payload: msg.payload.turbidity, \n            topic: \"Turbidity\", \n            timestamp: exactTimestamp \n        };\n        var temperatureChart = { \n            payload: msg.payload.temperature, \n            topic: \"Temperature\", \n            timestamp: exactTimestamp \n        };\n        \n        // Create separate messages for gauges (no timestamp needed)\n        var ph = { payload: msg.payload.ph, topic: \"pH\" };\n        var tds = { payload: msg.payload.tds, topic: \"TDS\" };\n        var turbidity = { payload: msg.payload.turbidity, topic: \"Turbidity\" };\n        var temperature = { payload: msg.payload.temperature, topic: \"Temperature\" };\n\n        // Create messages for status indicators\n        var phStatus = { payload: getPhStatus(msg.payload.ph) };\n        var tdsStatus = { payload: getTdsStatus(msg.payload.tds) };\n        var turbidityStatus = { payload: getTurbidityStatus(msg.payload.turbidity) };\n        var tempStatus = { payload: getTemperatureStatus(msg.payload.temperature) };\n        \n        // Create a copy of the original message with timestamp_iso for device info\n        var deviceInfoMsg = { payload: { ...msg.payload, timestamp_iso: exactTimestamp.toISOString() } };\n        \n        // Return all messages\n        return [phChart, tdsChart, turbidityChart, temperatureChart, \n                ph, tds, turbidity, temperature, \n                phStatus, tdsStatus, turbidityStatus, tempStatus, \n                deviceInfoMsg];\n    } catch (e) {\n        // Handle errors\n        node.error(\"Error processing timestamp: \" + e.message);\n        return null;\n    }\n}\n\n// Helper functions for status determination\nfunction getPhStatus(value) {\n    if (value >= 6.5 && value <= 8.5) return \"Normal\";\n    else if (value < 6.5) return \"Acidic\";\n    else return \"Alkaline\";\n}\n\nfunction getTdsStatus(value) {\n    if (value < 300) return \"Excellent\";\n    else if (value >= 300 && value <= 600) return \"Good\";\n    else if (value > 600 && value <= 900) return \"Fair\";\n    else return \"Poor\";\n}\n\nfunction getTurbidityStatus(value) {\n    if (value < 5) return \"Clear\";\n    else if (value >= 5 && value <= 10) return \"Slightly Cloudy\";\n    else return \"Cloudy\";\n}\n\nfunction getTemperatureStatus(value) {\n    if (value >= 20 && value <= 30) return \"Optimal\";\n    else if (value < 20) return \"Cold\";\n    else return \"Hot\";\n}\n\n// Return all messages in the correct order\nreturn [phChart, tdsChart, turbidityChart, temperatureChart, \n        ph, tds, turbidity, temperature, \n        phStatus, tdsStatus, turbidityStatus, tempStatus, \n        deviceInfoMsg];",
+        "outputs": 13,
         "timeout": 0,
         "noerr": 0,
         "initialize": "",
@@ -64,41 +64,50 @@
         "y": 180,
         "wires": [
             [
-                "b1384eafb1fdb4d4"
+                "6b49b4677bef91d9"
             ],
             [
-                "e0441cf4ce37f786"
+                "d12c696f11d24b0d"
             ],
             [
-                "b4346246fd4a4578"
+                "6364e32955bffd2a"
             ],
             [
-                "be26fc7075d9a7ec"
+                "01a9c2f161db8e75"
             ],
             [
-                "78b8d1b30c792681"
+                "2527fc3f1ca21cd7"
             ],
             [
-                "36110bef05607f11"
+                "fd626bf19ad345bd"
             ],
             [
-                "5ef569decf9e3f40"
+                "2aa41c9b52950692"
             ],
             [
-                "a96111223511eff2"
+                "3e6926217f41ec86"
             ],
             [
-                "9d6d11a01d7f4b1b"
+                "5e8ad09e67694cb5"
             ],
             [
-                "5f3c3f848455dbcb"
+                "0197b359c79aede3"
+            ],
+            [
+                "642eb482592f67d7"
+            ],
+            [
+                "3373bd546dce1cf9"
+            ],
+            [
+                "5ef683ac63264557"
             ]
         ]
     },
     {
-        "id": "590c01d021a7aba0",
+        "id": "d013ea0e0f82147e",
         "type": "function",
-        "z": "b06c23d8080bf66f",
+        "z": "cbdc5cf04f829c77",
         "name": "Calculate Water Quality Index",
         "func": "// Simple Water Quality Index calculation\nvar ph = msg.payload.ph;\nvar tds = msg.payload.tds;\nvar turbidity = msg.payload.turbidity;\nvar temperature = msg.payload.temperature;\n\n// Normalize values to 0-100 scale\nvar phScore = calculatePhScore(ph);\nvar tdsScore = calculateTdsScore(tds);\nvar turbidityScore = calculateTurbidityScore(turbidity);\nvar tempScore = calculateTempScore(temperature);\n\n// Calculate overall WQI (simple average)\nvar wqi = (phScore + tdsScore + turbidityScore + tempScore) / 4;\n\n// Quality classification\nvar quality = \"\";\nif (wqi >= 90) quality = \"Excellent\";\nelse if (wqi >= 70) quality = \"Good\";\nelse if (wqi >= 50) quality = \"Fair\";\nelse if (wqi >= 25) quality = \"Poor\";\nelse quality = \"Very Poor\";\n\n// Helper functions for parameter scoring\nfunction calculatePhScore(value) {\n    if (value >= 6.5 && value <= 7.5) return 100;\n    else if (value >= 6.0 && value < 6.5) return 80;\n    else if (value > 7.5 && value <= 8.5) return 80;\n    else if (value >= 5.0 && value < 6.0) return 60;\n    else if (value > 8.5 && value <= 9.0) return 60;\n    else return 30;\n}\n\nfunction calculateTdsScore(value) {\n    if (value < 300) return 100;\n    else if (value >= 300 && value <= 600) return 80;\n    else if (value > 600 && value <= 900) return 60;\n    else if (value > 900 && value <= 1200) return 40;\n    else return 20;\n}\n\nfunction calculateTurbidityScore(value) {\n    if (value < 1) return 100;\n    else if (value >= 1 && value < 5) return 80;\n    else if (value >= 5 && value <= 10) return 60;\n    else if (value > 10 && value <= 15) return 40;\n    else return 20;\n}\n\nfunction calculateTempScore(value) {\n    if (value >= 20 && value <= 30) return 100;\n    else if ((value >= 15 && value < 20) || (value > 30 && value <= 35)) return 80;\n    else if ((value >= 10 && value < 15) || (value > 35 && value <= 40)) return 60;\n    else return 40;\n}\n\n// Create messages for WQI gauge and status\nvar wqiGauge = { payload: Math.round(wqi), topic: \"WQI\" };\nvar wqiStatus = { payload: quality };\n\nreturn [wqiGauge, wqiStatus];",
         "outputs": 2,
@@ -111,17 +120,17 @@
         "y": 620,
         "wires": [
             [
-                "c4681334d5e6eb71"
+                "c5f2df3dec87f7d1"
             ],
             [
-                "878e3e5710e8f44b"
+                "773a74f2277a3964"
             ]
         ]
     },
     {
-        "id": "36110bef05607f11",
+        "id": "5e8ad09e67694cb5",
         "type": "ui_text",
-        "z": "b06c23d8080bf66f",
+        "z": "cbdc5cf04f829c77",
         "group": "fa13a851934c06de",
         "order": 1,
         "width": "6",
@@ -136,9 +145,9 @@
         "wires": []
     },
     {
-        "id": "5ef569decf9e3f40",
+        "id": "0197b359c79aede3",
         "type": "ui_text",
-        "z": "b06c23d8080bf66f",
+        "z": "cbdc5cf04f829c77",
         "group": "fa13a851934c06de",
         "order": 2,
         "width": "6",
@@ -153,9 +162,9 @@
         "wires": []
     },
     {
-        "id": "a96111223511eff2",
+        "id": "642eb482592f67d7",
         "type": "ui_text",
-        "z": "b06c23d8080bf66f",
+        "z": "cbdc5cf04f829c77",
         "group": "fa13a851934c06de",
         "order": 3,
         "width": "6",
@@ -170,9 +179,9 @@
         "wires": []
     },
     {
-        "id": "9d6d11a01d7f4b1b",
+        "id": "3373bd546dce1cf9",
         "type": "ui_text",
-        "z": "b06c23d8080bf66f",
+        "z": "cbdc5cf04f829c77",
         "group": "fa13a851934c06de",
         "order": 4,
         "width": "6",
@@ -187,9 +196,9 @@
         "wires": []
     },
     {
-        "id": "878e3e5710e8f44b",
+        "id": "773a74f2277a3964",
         "type": "ui_text",
-        "z": "b06c23d8080bf66f",
+        "z": "cbdc5cf04f829c77",
         "group": "86815b0d92fb9776",
         "order": 2,
         "width": "12",
@@ -208,10 +217,9 @@
         "wires": []
     },
     {
-        "id": "e0441cf4ce37f786",
+        "id": "2527fc3f1ca21cd7",
         "type": "ui_gauge",
-        "z": "b06c23d8080bf66f",
-        "name": "pH Gauge",
+        "z": "cbdc5cf04f829c77",
         "group": "8b3cf9e1355c6229",
         "order": 1,
         "width": "6",
@@ -235,10 +243,9 @@
         "wires": []
     },
     {
-        "id": "b4346246fd4a4578",
+        "id": "fd626bf19ad345bd",
         "type": "ui_gauge",
-        "z": "b06c23d8080bf66f",
-        "name": "TDS Gauge",
+        "z": "cbdc5cf04f829c77",
         "group": "8b3cf9e1355c6229",
         "order": 2,
         "width": "6",
@@ -262,10 +269,9 @@
         "wires": []
     },
     {
-        "id": "be26fc7075d9a7ec",
+        "id": "2aa41c9b52950692",
         "type": "ui_gauge",
-        "z": "b06c23d8080bf66f",
-        "name": "Turbidity Gauge",
+        "z": "cbdc5cf04f829c77",
         "group": "8b3cf9e1355c6229",
         "order": 3,
         "width": "6",
@@ -275,7 +281,7 @@
         "label": "NTU",
         "format": "{{value}}",
         "min": 0,
-        "max": "300",
+        "max": "50",
         "colors": [
             "#00b500",
             "#e6e600",
@@ -290,10 +296,9 @@
         "wires": []
     },
     {
-        "id": "78b8d1b30c792681",
+        "id": "3e6926217f41ec86",
         "type": "ui_gauge",
-        "z": "b06c23d8080bf66f",
-        "name": "Temperature Gauge",
+        "z": "cbdc5cf04f829c77",
         "group": "8b3cf9e1355c6229",
         "order": 4,
         "width": "6",
@@ -317,10 +322,9 @@
         "wires": []
     },
     {
-        "id": "c4681334d5e6eb71",
+        "id": "c5f2df3dec87f7d1",
         "type": "ui_gauge",
-        "z": "b06c23d8080bf66f",
-        "name": "WQI Gauge",
+        "z": "cbdc5cf04f829c77",
         "group": "86815b0d92fb9776",
         "order": 1,
         "width": "12",
@@ -345,28 +349,64 @@
         "wires": []
     },
     {
-        "id": "b1384eafb1fdb4d4",
-        "type": "ui_chart",
-        "z": "b06c23d8080bf66f",
-        "name": "Water Quality History",
-        "group": "ae3382f91f195f93",
+        "id": "5ef683ac63264557",
+        "type": "ui_template",
+        "z": "cbdc5cf04f829c77",
+        "group": "cc546d0ef79bf5ac",
+        "name": "Device Info",
         "order": 1,
         "width": "24",
-        "height": "8",
-        "label": "Water Quality Parameters History",
+        "height": "2",
+        "format": "<div style=\"text-align: center; width: 100%;\">\n    <h4>Device ID: {{msg.payload.deviceId || 'Unknown'}} </h4> \n    <h4> Last updated: {{msg.payload.timestamp_iso || 'Not available'}}</h4>\n</div>",
+        "storeOutMessages": true,
+        "fwdInMessages": true,
+        "resendOnRefresh": true,
+        "templateScope": "local",
+        "className": "",
+        "x": 730,
+        "y": 540,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "4625a113f2f382fe",
+        "type": "mongodb3 in",
+        "z": "cbdc5cf04f829c77",
+        "service": "_ext_",
+        "configNode": "5025d7188d38d556",
+        "name": "mongoDB",
+        "collection": "swqms",
+        "operation": "insert",
+        "x": 340,
+        "y": 740,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6b49b4677bef91d9",
+        "type": "ui_chart",
+        "z": "cbdc5cf04f829c77",
+        "name": "pH History",
+        "group": "ae3382f91f195f93",
+        "order": 1,
+        "width": "12",
+        "height": "5",
+        "label": "pH History",
         "chartType": "line",
-        "legend": "true",
+        "legend": "false",
         "xformat": "HH:mm:ss",
         "interpolate": "linear",
-        "nodata": "Waiting for data...",
+        "nodata": "Waiting for pH data...",
         "dot": false,
-        "ymin": "",
-        "ymax": "",
+        "ymin": "0",
+        "ymax": "14",
         "removeOlder": "10",
         "removeOlderPoints": "100",
         "removeOlderUnit": "60",
         "cutout": 0,
-        "useOneColor": false,
+        "useOneColor": true,
         "useUTC": false,
         "colors": [
             "#1f77b4",
@@ -382,44 +422,140 @@
         "outputs": 1,
         "useDifferentColor": false,
         "className": "",
-        "x": 760,
+        "x": 730,
+        "y": 20,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "d12c696f11d24b0d",
+        "type": "ui_chart",
+        "z": "cbdc5cf04f829c77",
+        "name": "TDS History",
+        "group": "ae3382f91f195f93",
+        "order": 2,
+        "width": "12",
+        "height": "5",
+        "label": "TDS History",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "Waiting for TDS data...",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "1500",
+        "removeOlder": "10",
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": true,
+        "useUTC": false,
+        "colors": [
+            "#aec7e8",
+            "#aec7e8",
+            "#ff7f0e",
+            "#d62728",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 730,
+        "y": 60,
+        "wires": [
+            []
+        ]
+    },
+    {
+        "id": "6364e32955bffd2a",
+        "type": "ui_chart",
+        "z": "cbdc5cf04f829c77",
+        "name": "Turbidity History",
+        "group": "ae3382f91f195f93",
+        "order": 3,
+        "width": "12",
+        "height": "5",
+        "label": "Turbidity History",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "Waiting for turbidity data...",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "50",
+        "removeOlder": "10",
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": true,
+        "useUTC": false,
+        "colors": [
+            "#ff7f0e",
+            "#aec7e8",
+            "#ff7f0e",
+            "#d62728",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
+        "className": "",
+        "x": 740,
         "y": 100,
         "wires": [
             []
         ]
     },
     {
-        "id": "5f3c3f848455dbcb",
-        "type": "ui_template",
-        "z": "b06c23d8080bf66f",
-        "group": "cc546d0ef79bf5ac",
-        "name": "Device Info",
-        "order": 1,
-        "width": "24",
-        "height": "2",
-        "format": "<div style=\"text-align: center; width: 100%;\">\n    <h4>Device ID: {{msg.payload.deviceId || 'Unknown'}} </h4> \n    <br>\n    <br>\n    <h4> Last updated: {{msg.payload.timestamp_iso || 'Not available'}}</h4>\n</div>",
-        "storeOutMessages": true,
-        "fwdInMessages": true,
-        "resendOnRefresh": true,
-        "templateScope": "local",
+        "id": "01a9c2f161db8e75",
+        "type": "ui_chart",
+        "z": "cbdc5cf04f829c77",
+        "name": "Temperature History",
+        "group": "ae3382f91f195f93",
+        "order": 4,
+        "width": "12",
+        "height": "5",
+        "label": "Temperature History",
+        "chartType": "line",
+        "legend": "false",
+        "xformat": "HH:mm:ss",
+        "interpolate": "linear",
+        "nodata": "Waiting for temperature data...",
+        "dot": false,
+        "ymin": "0",
+        "ymax": "40",
+        "removeOlder": "10",
+        "removeOlderPoints": "100",
+        "removeOlderUnit": "60",
+        "cutout": 0,
+        "useOneColor": true,
+        "useUTC": false,
+        "colors": [
+            "#d62728",
+            "#aec7e8",
+            "#ff7f0e",
+            "#d62728",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000",
+            "#000000"
+        ],
+        "outputs": 1,
+        "useDifferentColor": false,
         "className": "",
-        "x": 730,
-        "y": 540,
-        "wires": [
-            []
-        ]
-    },
-    {
-        "id": "0d97cc0df17087e9",
-        "type": "mongodb3 in",
-        "z": "b06c23d8080bf66f",
-        "service": "_ext_",
-        "configNode": "5025d7188d38d556",
-        "name": "mongoDB",
-        "collection": "swqms",
-        "operation": "insert",
-        "x": 340,
-        "y": 740,
+        "x": 760,
+        "y": 140,
         "wires": [
             []
         ]
@@ -490,17 +626,6 @@
         "className": ""
     },
     {
-        "id": "ae3382f91f195f93",
-        "type": "ui_group",
-        "name": "History",
-        "tab": "5f1eaf98fb9b6835",
-        "order": 4,
-        "disp": true,
-        "width": 6,
-        "collapse": false,
-        "className": ""
-    },
-    {
         "id": "cc546d0ef79bf5ac",
         "type": "ui_group",
         "name": "Device Info",
@@ -518,6 +643,17 @@
         "name": "nodered",
         "options": "",
         "parallelism": -1
+    },
+    {
+        "id": "ae3382f91f195f93",
+        "type": "ui_group",
+        "name": "Readings History",
+        "tab": "5f1eaf98fb9b6835",
+        "order": 4,
+        "disp": true,
+        "width": 6,
+        "collapse": false,
+        "className": ""
     },
     {
         "id": "0dd062dc9fc95904",

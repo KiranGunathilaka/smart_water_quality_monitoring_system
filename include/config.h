@@ -35,8 +35,8 @@ static const int MAX_PH_WINDOW_SIZE = 10; // Maximum possible window size
 // Temperature sensor constants
 #define TEMP_OFFSET 0.5f
 #define TEMP_SCALE_FACTOR 0.1f
-#define TEMP_30_VOLTAGE 0.90  // Averaged for 10 Values (Very high variation (from about 80 to 100 including outliers in between 65 - 75 for about every 10 reading))
-#define TEMP_45_VOLTAGE 0.96 // Same very high variation
+#define TEMP_30_VOLTAGE 0.6  // Averaged for 10 Values (Very high variation (from about 80 to 100 including outliers in between 65 - 75 for about every 10 reading))
+#define TEMP_45_VOLTAGE 0.84 // Same very high variation
 
 // WiFi Configuration
 #define WIFI_SSID "Chiki Chiki Bamba"
