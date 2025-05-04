@@ -141,7 +141,6 @@ All timestamps are localized to **Asia/Colombo (UTC+5:30)**.
 | `correlation_heatmap.png` | Visual correlation plot |
 | `session_trends.csv` | Session-wise parameter behavior |
 | `.png plots` | Trend graphs (raw + smoothed) |
-| `final_report.txt` | Full analytical summary |
 
 ---
 
